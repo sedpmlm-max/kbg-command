@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KBG Molty Royale — Master Command</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#070809;--s1:#111318;--s2:#181c24;--s3:#0d0f14;--border:#1e2330;--cyan:#00D2FF;--green:#00FF88;--amber:#FFB800;--red:#FF4466;--text:#e8eaed;--text2:#8b95a5;--r:10px}
+body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);font-size:12px;min-height:100vh}
+
+/* TOPBAR */
+.topbar{background:var(--s1);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-title{font-family:'Syne',sans-serif;color:var(--cyan);font-size:14px;font-weight:800;letter-spacing:1px}
+.topbar-pills{display:flex;gap:8px}
+.pill{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:11px;display:flex;gap:6px;align-items:center}
+.pill .n{font-size:16px;font-weight:700}
+.pill.c .n{color:var(--cyan)}
+.pill.g .n{color:var(--green)}
+.pill.a .n{color:var(--amber)}
+.pill.r .n{color:var(--red)}
+
+/* SUMMARY */
+.summary{background:var(--s3);border-bottom:1px solid var(--border);padding:10px 20px;display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.scard{text-align:center;padding:8px;background:var(--s1);border-radius:8px;border:1px solid var(--border)}
+.scard .sv{font-size:18px;font-weight:700;color:var(--cyan);font-family:'Syne',sans-serif}
+.scard .sl{font-size:9px;color:var(--text2);margin-top:2px;text-transform:uppercase;letter-spacing:1px}
+
+/* GRID */
+.bots-grid{padding:16px 20px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+
+/* BOT CARD */
+.bot{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:12px;transition:border-color .2s,box-shadow .2s;position:relative;overflow:hidden}
+.bot::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .3s}
+.bot:hover{border-color:rgba(0,210,255,.2);box-shadow:0 0 16px rgba(0,210,255,.06)}
+.bot:hover::before{opacity:1}
+.bot.playing{border-color:rgba(0,255,136,.18)}
+.bot.playing::before{opacity:1;background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.bot.dead{border-color:rgba(255,68,102,.15)}
+.bot.dead::before{opacity:1;background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.bot.offline{opacity:.45}
+.bot-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.bot-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.badge{padding:2px 9px;border-radius:10px;font-size:9px;font-weight:700;letter-spacing:.5px}
+.badge.ok{background:rgba(0,255,136,.12);color:var(--green)}
+.badge.dead{background:rgba(255,68,102,.18);color:var(--red);border:1px solid rgba(255,68,102,.25)}
+.badge.idle{background:rgba(255,184,0,.12);color:var(--amber)}
+.badge.off{background:rgba(125,133,144,.1);color:var(--text2)}
+.bot-meta{font-size:10px;color:var(--text2);margin-bottom:7px}
+
+/* BARS */
+.bars{display:flex;flex-direction:column;gap:4px;margin-bottom:7px}
+.bar-row{display:flex;align-items:center;gap:6px}
+.bar-lbl{font-size:9px;color:var(--text2);width:14px;flex-shrink:0}
+.bar-track{flex:1;height:5px;background:var(--s2);border-radius:3px;overflow:hidden}
+.bar-hp{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--red),var(--green));transition:width .7s ease}
+.bar-ep{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--cyan));transition:width .7s ease}
+.bar-val{font-size:9px;color:var(--text2);width:32px;text-align:right;flex-shrink:0}
+
+/* STATS */
+.bot-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:6px}
+.bstat{text-align:center;background:var(--s2);border-radius:5px;padding:4px 2px}
+.bstat .bv{font-size:11px;font-weight:700;color:var(--cyan)}
+.bstat .bl{font-size:8px;color:var(--text2);margin-top:1px}
+
+/* ACTION */
+.bot-action{background:var(--s2);border-radius:5px;padding:5px 8px;font-size:9px;color:var(--green);min-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* SOURCE + LINK */
+.bot-foot{display:flex;justify-content:space-between;align-items:center;margin-top:5px}
+.source-tag{font-size:9px;color:var(--text2)}
+.dash-link{font-size:9px;color:var(--cyan);text-decoration:none;opacity:.6;transition:opacity .2s}
+.dash-link:hover{opacity:1}
+
+/* SKELETON */
+.skel{background:linear-gradient(90deg,var(--s2) 25%,var(--s3) 50%,var(--s2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px;height:10px;margin:4px 0}
+.skel.w70{width:70%}.skel.w50{width:50%}
+
+/* FOOTER */
+.footer{padding:8px 20px;background:var(--s1);border-top:1px solid var(--border);font-size:10px;color:var(--text2);display:flex;justify-content:space-between;align-items:center}
+.footer .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);display:inline-block;margin-right:5px;animation:pulse 2s infinite}
+
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.bot{animation:fadeUp .35s ease both}
+
+@media(max-width:1050px){.bots-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.bots-grid{grid-template-columns:1fr}.summary{grid-template-columns:repeat(3,1fr)}.topbar-pills{display:none}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">KBG MOLTY ROYALE — MASTER COMMAND</div>
+  <div class="topbar-pills">
+    <div class="pill c"><span class="n">9</span><span>Bots</span></div>
+    <div class="pill g"><span class="n" id="p-playing">—</span><span>Playing</span></div>
+    <div class="pill r"><span class="n" id="p-dead">—</span><span>Dead</span></div>
+    <div class="pill a"><span class="n" id="p-idle">—</span><span>Idle</span></div>
+  </div>
+</div>
+
+<div class="summary">
+  <div class="scard"><div class="sv" style="color:var(--green)" id="s-wins">—</div><div class="sl">Total Wins</div></div>
+  <div class="scard"><div class="sv" style="color:var(--red)" id="s-kills">—</div><div class="sl">Total Kills</div></div>
+  <div class="scard"><div class="sv" style="color:var(--amber)" id="s-moltz">—</div><div class="sl">Total Moltz</div></div>
+  <div class="scard"><div class="sv" style="color:var(--amber)" id="s-smoltz">—</div><div class="sl">Total sMoltz</div></div>
+  <div class="scard"><div class="sv" id="s-cross">—</div><div class="sl">Total CROSS</div></div>
+  <div class="scard"><div class="sv" id="s-winrate">—</div><div class="sl">Win Rate</div></div>
+</div>
+
+<div class="bots-grid" id="bots-grid"></div>
+
+<div class="footer">
+  <span><span class="dot"></span>Last update: <span id="f-time">—</span> · Auto-refresh: 5s</span>
+  <span id="f-summary">9 sources</span>
+</div>
+
+<script>
+const BOTS = [
+  { id:'b1', label:'BenKS #1',  src:'railway-1', url:'https://benksmolty-production-0216.up.railway.app' },
+  { id:'b2', label:'BenKS #2',  src:'railway-2', url:'https://benksmolty-production.up.railway.app' },
+  { id:'b3', label:'BenKS #3',  src:'railway-3', url:'https://benksmolty-production-8fac.up.railway.app' },
+  { id:'b4', label:'iBenK #1',  src:'railway-4', url:'https://ibenkmotly-production.up.railway.app' },
+  { id:'b5', label:'iBenK #2',  src:'railway-5', url:'https://ibenkmotly-production-6daa.up.railway.app' },
+  { id:'b6', label:'KGB #5',    src:'railway-6', url:'https://kgbmolty5-production-8e21.up.railway.app' },
+  { id:'b7', label:'iBenK #3',  src:'railway-7', url:'https://ibenkmotly-production-81fb.up.railway.app' },
+  { id:'b8', label:'iBenK #4',  src:'railway-8', url:'https://ibenkmotly-production-3971.up.railway.app' },
+  { id:'b9', label:'VPS Bot',   src:'vps',       url:'http://163.245.219.28:8080' },
+];
+
+const ITEM_NAMES = {
+  rewards:'$Moltz',reward1:'$Moltz',reward:'$Moltz',
+  emergency_food:'Emrg Food',emergency_rations:'Emrg Rations',
+  bandage:'Bandage',medkit:'Medkit',energy_drink:'Energy Drink',
+  dagger:'Dagger',sword:'Sword',katana:'Katana',
+  bow:'Bow',pistol:'Pistol',sniper:'Sniper',
+  binoculars:'Binos',map:'Map',megaphone:'Megaphone',radio:'Radio',
+  fist:'Fist',fists:'Fists',
+};
+const fmt = n => !n ? '0' : n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'k' : String(n);
+const esc = s => { const d = document.createElement('div'); d.textContent = String(s??''); return d.innerHTML; };
+const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+function itemName(i) {
+  if (!i) return '?';
+  const raw = (typeof i==='string' ? i : (i.typeId||i.type||i.name||i.id||'?')).toLowerCase();
+  return ITEM_NAMES[raw] || (raw.length > 14 ? raw.slice(0,10)+'…' : raw);
+}
+
+const STATE = {};
+BOTS.forEach(b => STATE[b.id] = { ok: false, data: null });
+
+// Build grid
+function initGrid() {
+  document.getElementById('bots-grid').innerHTML = BOTS.map((b, i) => `
+    <div class="bot" id="card-${b.id}" style="animation-delay:${i*.04}s">
+      <div class="bot-header">
+        <span class="bot-name">${esc(b.label)}</span>
+        <span class="badge off" id="badge-${b.id}">LOADING</span>
+      </div>
+      <div id="body-${b.id}">
+        <div class="skel"></div><div class="skel w70"></div><div class="skel w50"></div>
+      </div>
+    </div>`).join('');
+}
+
+// Fetch one bot state
+async function fetchBot(bot) {
+  try {
+    const r = await fetch(bot.url + '/api/state', { signal: AbortSignal.timeout(5000) });
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    STATE[bot.id] = { ok: true, data: await r.json() };
+  } catch(e) {
+    STATE[bot.id] = { ok: false, data: null, err: e.message };
+  }
+}
+
+// Render one card
+function renderCard(bot) {
+  const s = STATE[bot.id];
+  const card = document.getElementById('card-'+bot.id);
+  const badge = document.getElementById('badge-'+bot.id);
+  const body = document.getElementById('body-'+bot.id);
+  if (!card||!badge||!body) return;
+
+  if (!s.ok || !s.data) {
+    card.className = 'bot offline';
+    badge.className = 'badge off'; badge.textContent = 'OFFLINE';
+    body.innerHTML = `<div style="text-align:center;padding:14px 0;color:var(--text2);font-size:10px">⚠️ Cannot reach dashboard</div>
+      <div class="bot-foot"><span class="source-tag">${esc(bot.src)}</span><a class="dash-link" href="${bot.url}" target="_blank">open ↗</a></div>`;
+    return;
+  }
+
+  const d = s.data;
+  const agents = Object.values(d.agents||{});
+  const ag = agents[0] || {};
+  const stats = d.stats || {};
+  const st = ag.status || 'idle';
+
+  // Card class
+  card.className = 'bot ' + (st==='playing'?'playing':st==='dead'?'dead':'');
+
+  // Badge
+  const bClass = st==='playing'?'ok':st==='dead'?'dead':st==='error'?'dead':'idle';
+  const bText = st==='playing'?'PLAYING':st==='dead'?'DEAD':st==='error'?'ERROR':'IDLE';
+  badge.className = 'badge '+bClass; badge.textContent = bText;
+
+  const hp = ag.hp??0, maxHp = ag.maxHp||100;
+  const ep = ag.ep??0, maxEp = ag.maxEp||10;
+  const hpPct = Math.min(100, Math.round(hp/maxHp*100));
+  const epPct = Math.min(100, Math.round(ep/maxEp*100));
+  const hpCol = hpPct>50?'var(--green)':hpPct>25?'var(--amber)':'var(--red)';
+
+  const atk = (ag.atk||0)+(ag.weapon_bonus||0);
+  const weapon = ITEM_NAMES[(ag.weapon||'fist').toLowerCase()] || ag.weapon || 'Fist';
+  const kills = ag.kills||0;
+  const wins  = ag.wins || stats.total_wins||0;
+  const moltz = fmt(ag.moltz||stats.total_moltz||0);
+  const smoltz= fmt(ag.smoltz||stats.total_smoltz||0);
+  const region= ag.region||'—';
+  const alive = ag.alive_count||'—';
+  const action= ag.last_action||(st==='dead'?'☠ DEAD — waiting for game to end':'Waiting...');
+  const actionCol = st==='dead'?'color:var(--red)':st==='idle'?'color:var(--amber)':'';
+
+  // Inventory (max 4 items)
+  const inv = (ag.inventory||[]).slice(0,4).map(i => `<span style="padding:1px 5px;background:var(--bg);border:1px solid var(--border);border-radius:3px;font-size:8px;color:var(--text2)">${esc(itemName(i))}</span>`).join('');
+
+  body.innerHTML = `
+    <div class="bot-meta">Region: ${esc(region)} &nbsp;|&nbsp; Alive: ${esc(alive)}</div>
+    <div class="bars">
+      <div class="bar-row"><span class="bar-lbl">HP</span><div class="bar-track"><div class="bar-hp" style="width:${hpPct}%"></div></div><span class="bar-val" style="color:${hpCol}">${hp}/${maxHp}</span></div>
+      <div class="bar-row"><span class="bar-lbl">EP</span><div class="bar-track"><div class="bar-ep" style="width:${epPct}%"></div></div><span class="bar-val">${ep}/${maxEp}</span></div>
+    </div>
+    <div class="bot-stats">
+      <div class="bstat"><div class="bv">${kills}</div><div class="bl">KILLS</div></div>
+      <div class="bstat"><div class="bv" style="color:var(--green)">${atk}</div><div class="bl">ATK</div></div>
+      <div class="bstat"><div class="bv" style="font-size:9px">${esc(weapon)}</div><div class="bl">WEAPON</div></div>
+      <div class="bstat"><div class="bv" style="color:var(--amber)">${wins}</div><div class="bl">WINS</div></div>
+    </div>
+    <div class="bot-action" style="${actionCol}">▸ ${esc(action)}</div>
+    ${inv ? `<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:5px">${inv}</div>` : ''}
+    <div class="bot-foot">
+      <span class="source-tag">${esc(bot.src)} &nbsp;·&nbsp; <span style="color:var(--cyan)">${smoltz} sMoltz</span></span>
+      <a class="dash-link" href="${bot.url}" target="_blank">open ↗</a>
+    </div>`;
+}
+
+// Update global summary + topbar
+function updateSummary() {
+  let playing=0, dead=0, idle=0, online=0;
+  let wins=0, kills=0, moltz=0, smoltz=0, cross=0, totalGames=0;
+
+  BOTS.forEach(b => {
+    const s = STATE[b.id];
+    if (!s.ok||!s.data) return;
+    online++;
+    const ag = Object.values(s.data.agents||{})[0]||{};
+    const stats = s.data.stats||{};
+    const st = ag.status||'idle';
+    if (st==='playing') playing++;
+    else if (st==='dead') dead++;
+    else idle++;
+    wins   += ag.wins||stats.total_wins||0;
+    moltz  += ag.moltz||stats.total_moltz||0;
+    smoltz += ag.smoltz||stats.total_smoltz||0;
+    cross  += parseFloat(ag.cross||stats.total_cross||0);
+    kills  += ag.kills||0;
+    totalGames += ag.wins||0; // approx
+  });
+
+  const wr = wins+kills > 0 ? Math.round(wins/(wins+kills)*100) : 0;
+
+  set('p-playing', playing); set('p-dead', dead); set('p-idle', idle);
+  set('s-wins', wins); set('s-kills', kills);
+  set('s-moltz', fmt(moltz)); set('s-smoltz', fmt(smoltz));
+  set('s-cross', cross.toFixed(2));
+  set('s-winrate', wr+'%');
+
+  const now = new Date();
+  set('f-time', now.toLocaleTimeString());
+  set('f-summary', `9 sources · ${online} online · ${playing} playing · ${dead} dead · ${idle} idle`);
+}
+
+// Main loop
+async function refresh() {
+  await Promise.allSettled(BOTS.map(fetchBot));
+  BOTS.forEach(renderCard);
+  updateSummary();
+}
+
+initGrid();
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>
