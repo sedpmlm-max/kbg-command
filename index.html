@@ -208,6 +208,10 @@ function renderCard(bot) {
   const bText = st==='playing'?'PLAYING':st==='dead'?'DEAD':st==='error'?'ERROR':'IDLE';
   badge.className = 'badge '+bClass; badge.textContent = bText;
 
+  // Auto update card title with real agent name from API
+  const nameEl = card.querySelector('.bot-name');
+  if (nameEl && ag.name) nameEl.textContent = ag.name;
+
   const hp = ag.hp??0, maxHp = ag.maxHp||100;
   const ep = ag.ep??0, maxEp = ag.maxEp||10;
   const hpPct = Math.min(100, Math.round(hp/maxHp*100));
